@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { Form, Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import {
   Error,
+  Form,
   Input,
   Switcher,
   Title,
   Wrapper,
 } from "../components/AuthComponents";
+import GithubButton from "../components/GithubButton";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -73,6 +75,7 @@ export default function Login() {
         Don't have an accout?{" "}
         <Link to={"/create-account"}>Create one &rarr;</Link>
       </Switcher>
+      <GithubButton />
     </Wrapper>
   );
 }

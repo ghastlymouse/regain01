@@ -11,6 +11,7 @@ import {
   Title,
   Wrapper,
 } from "../components/AuthComponents";
+import GithubButton from "../components/GithubButton";
 
 export default function CreateAccount() {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ export default function CreateAccount() {
       <Switcher>
         Already have an accout? <Link to={"/login"}>Log in &rarr;</Link>
       </Switcher>
+      <GithubButton />
     </Wrapper>
   );
 }
