@@ -3,6 +3,11 @@ import { useState } from "react";
 import styled from "styled-components";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { FirebaseError } from "firebase/app";
+
+// const errors = {
+//   "auth/email-already-in-use": "해당 이메일은 이미 존재합니다."
+// }
 
 const Title = styled.h1`
   font-size: 42px;
@@ -19,6 +24,7 @@ const Wrapper = styled.div`
 
 const Form = styled.form`
   margin-top: 50px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -64,8 +70,10 @@ export default function CreateAccount() {
       setPassword(value);
     }
   };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
     if (
       isLoading ||
       name.trim() === "" ||
@@ -86,7 +94,9 @@ export default function CreateAccount() {
       });
       navigate("/");
     } catch (e) {
-      // setError
+      if (e instanceof FirebaseError) {
+        setError(e.message);
+      }
     } finally {
       setIsLoading(false);
     }
