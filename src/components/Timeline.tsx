@@ -2,10 +2,11 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { db } from "../firebase";
+import Tweet from "./Tweet";
 
 export type TweetType = {
   id: string;
-  photo: string;
+  photo?: string;
   tweet: string;
   userId: string;
   username: string;
@@ -32,5 +33,11 @@ export default function Timeline() {
   useEffect(() => {
     fetchTweets();
   }, []);
-  return <Wrapper>{JSON.stringify(tweets)}</Wrapper>;
+  return (
+    <Wrapper>
+      {tweets.map((tweet) => (
+        <Tweet key={tweet.id} {...tweet} />
+      ))}
+    </Wrapper>
+  );
 }
