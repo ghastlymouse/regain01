@@ -47,7 +47,18 @@ export const Error = styled.span`
 
 export const Switcher = styled.span`
   margin-top: 20px;
+  font-size: 15px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
   a {
     color: #1d9bf0;
+  }
+  button {
+    color: #1d9bf0;
+    text-decoration: underline;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
   }
 `;

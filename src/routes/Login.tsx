@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import {
   Error,
@@ -48,6 +51,17 @@ export default function Login() {
     }
     console.log(name, email, password);
   };
+
+  const resetPassword = async (email: string) => {
+    if (!email.trim()) {
+      return alert("Please enter the e-mail");
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Password reset email has been sent, please check your email.");
+    } catch (error) {}
+  };
+
   return (
     <Wrapper>
       <Title>Log into Nwitter</Title>
@@ -74,6 +88,12 @@ export default function Login() {
       <Switcher>
         Don't have an accout?{" "}
         <Link to={"/create-account"}>Create one &rarr;</Link>
+      </Switcher>
+      <Switcher>
+        Forget your password?{" "}
+        <button type="button" onClick={() => resetPassword(email)}>
+          Reset Password &rarr;
+        </button>
       </Switcher>
       <GithubButton />
     </Wrapper>
