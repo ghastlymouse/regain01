@@ -97,6 +97,8 @@ export default function PostTweetForm() {
         await updateDoc(document, {
           photo: url,
         });
+        setTweet("");
+        setFile(null);
       }
     } catch (e) {
       console.log(e);
