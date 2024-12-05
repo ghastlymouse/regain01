@@ -5,10 +5,12 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
 import {
   collection,
+  doc,
   getDocs,
   limit,
   orderBy,
   query,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { TweetType } from "../components/Timeline";
@@ -45,8 +47,32 @@ const AvatarInput = styled.input`
   display: none;
 `;
 
-const Name = styled.span`
-  font-size: 22px;
+const Row = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+`;
+
+const Name = styled.input`
+  font-size: 20px;
+  background-color: transparent;
+  color: white;
+  border: 0;
+  ::placeholder {
+    color: white;
+  }
+`;
+
+const ChangeButton = styled.button`
+  background-color: #1d9bf0;
+  color: white;
+  font-weight: 600;
+  border: 0;
+  font-size: 12px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  cursor: pointer;
 `;
 
 const Tweets = styled.div`
@@ -58,6 +84,7 @@ const Tweets = styled.div`
 export default function Profile() {
   const user = auth.currentUser;
   const [avatar, setAvatar] = useState(user?.photoURL);
+  const [newName, setNewName] = useState("");
   const [tweets, setTweets] = useState<TweetType[]>([]);
 
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +99,32 @@ export default function Profile() {
       await updateProfile(user, {
         photoURL: avatarUrl,
       });
+    }
+  };
+
+  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewName(e.target.value);
+  };
+
+  const onUsernameChange = async () => {
+    if (!user || newName.trim() === "") return;
+    try {
+      await updateProfile(user, {
+        displayName: newName,
+      });
+
+      // 유저 이름 변경 후, 트윗마다 작성자 이름 변경
+      const updateDocs = tweets.map(async (tweet) => {
+        const document = doc(db, "tweets", tweet.id);
+        await updateDoc(document, {
+          username: newName,
+        });
+      });
+      await Promise.all(updateDocs);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setNewName("");
     }
   };
 
@@ -92,7 +145,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchTweets();
-  }, []);
+  });
 
   return (
     <Wrapper>
@@ -123,7 +176,15 @@ export default function Profile() {
         accept="image/*"
         onChange={onAvatarChange}
       />
-      <Name>{user?.displayName ?? "Anonymous"}</Name>
+      <Row>
+        <Name
+          type="text"
+          placeholder={`current name : ${user?.displayName ?? "Anonymous"}`}
+          value={newName}
+          onChange={onNameChange}
+        />
+        <ChangeButton onClick={onUsernameChange}>Change</ChangeButton>
+      </Row>
       <Tweets>
         {tweets.map((tweet) => (
           <Tweet key={tweet.id} {...tweet} />
