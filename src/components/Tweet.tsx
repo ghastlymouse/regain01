@@ -2,7 +2,12 @@ import styled from "styled-components";
 import { TweetType } from "./Timeline";
 import { auth, db, storage } from "../firebase";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 import { useState } from "react";
 
 const Wrapper = styled.div`
@@ -36,8 +41,6 @@ const Photo = styled.img`
   border-radius: 15px;
 `;
 
-// const CreatedAt = styled.p``;
-
 const DeleteButton = styled.button`
   background-color: tomato;
   color: white;
@@ -62,6 +65,22 @@ const EditButton = styled.button`
   cursor: pointer;
 `;
 
+const PhotoChangeButton = styled.label`
+  background-color: #1d9bf0;
+  color: white;
+  font-weight: 600;
+  border: 0;
+  font-size: 12px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  cursor: pointer;
+`;
+
+const PhotoInput = styled.input`
+  display: none;
+`;
+
 const CancelButton = styled.button`
   background-color: gray;
   color: white;
@@ -80,7 +99,7 @@ const TextArea = styled.textarea`
   font-size: 16px;
   background-color: black;
   color: white;
-  width: 100%;
+  width: 90%;
   resize: none;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -96,6 +115,8 @@ export default function Tweet({
   const user = auth.currentUser;
   const [editmode, setEditmode] = useState(false);
   const [newTweet, setNewTweet] = useState(tweet);
+  const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const onDelete = async () => {
     const ok = confirm("Are you sure you want to delete this tweet?");
     if (user?.uid !== userId || !ok) return;
@@ -116,18 +137,38 @@ export default function Tweet({
     setNewTweet(e.target.value);
   };
 
+  const onFIleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = e.target;
+    if (files && files.length === 1) {
+      if (files[0].size < 1 * 1024 * 1024) {
+        setFile(files[0]);
+      }
+    }
+  };
+
   const onEdit = async () => {
     const user = auth.currentUser;
-    if (user?.uid !== userId) return;
+    if (user?.uid !== userId || newTweet.trim() === "") return;
     try {
+      setIsLoading(true);
       const document = doc(db, "tweets", id);
       await updateDoc(document, {
         tweet: newTweet,
         createdAt: Date.now(),
       });
+      if (file) {
+        const locaionRef = ref(storage, `tweets/${user.uid}/${id}`);
+        const result = await uploadBytes(locaionRef, file);
+        const url = await getDownloadURL(result.ref);
+        await updateDoc(document, {
+          photo: url,
+        });
+      }
     } catch (e) {
       console.log(e);
     } finally {
+      setIsLoading(false);
+      setFile(null);
       setEditmode(false);
     }
   };
@@ -151,11 +192,24 @@ export default function Tweet({
             {editmode ? (
               <>
                 {" "}
-                <EditButton onClick={onEdit}>Edit</EditButton>
+                <EditButton onClick={onEdit}>
+                  {isLoading ? "Editing..." : "Edit"}
+                </EditButton>
+                <PhotoChangeButton htmlFor="photo">
+                  {photo ? "change photo" : "add photo"}
+                  {file ? "✅" : null}
+                </PhotoChangeButton>
+                <PhotoInput
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={onFIleChange}
+                />
                 <CancelButton
                   onClick={() => {
                     setEditmode(false);
                     setNewTweet(tweet);
+                    setFile(null);
                   }}
                 >
                   cancel
