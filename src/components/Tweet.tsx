@@ -38,11 +38,7 @@ export default function Tweet({ username, photo, tweet }: TweetType) {
           <Payload>{tweet}</Payload>
         </Username>
       </Column>
-      {photo ? (
-        <Column>
-          <Photo src={photo} />
-        </Column>
-      ) : null}
+      {photo ? <Photo src={photo} /> : null}
     </Wrapper>
   );
 }
